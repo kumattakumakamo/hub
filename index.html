@@ -16,6 +16,38 @@
         <i class="fa-solid fa-book icon"></i>
         <p class="title">Book App</p>
     </a>
+
+    <!-- floating plus button -->
+    <button id="openOverlay" class="fab"><i class="fa-solid fa-plus"></i></button>
+
+    <!-- overlay window -->
+    <div id="overlay" class="overlay">
+        <div class="overlay-content">
+            <span id="closeOverlay" class="close-button">&times;</span>
+            <p>ここに小さなウィンドウの内容を記述します。</p>
+        </div>
+    </div>
+
+    <script>
+        const openBtn = document.getElementById('openOverlay');
+        const closeBtn = document.getElementById('closeOverlay');
+        const overlay = document.getElementById('overlay');
+
+        openBtn.addEventListener('click', () => {
+            overlay.style.display = 'flex';
+        });
+
+        closeBtn.addEventListener('click', () => {
+            overlay.style.display = 'none';
+        });
+
+        // click outside to close
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) {
+                overlay.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 
 </html>
