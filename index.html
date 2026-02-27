@@ -16,6 +16,7 @@
         <i class="fa-solid fa-book icon"></i>
         <p class="title">Book App</p>
     </a>
+    <div class="yokonarabi" id="linkList"></div>
 
     <!-- floating plus button -->
     <button id="openOverlay" class="fab"><i class="fa-solid fa-plus"></i></button>
@@ -24,30 +25,15 @@
     <div id="overlay" class="overlay">
         <div class="overlay-content">
             <span id="closeOverlay" class="close-button">&times;</span>
-            <p>ここに小さなウィンドウの内容を記述します。</p>
+            <input type="text" placeholder="名前を入力" id="nameInput">
+            <input type="text" placeholder="URLを入力" id="urlInput">
+            <input type="text" placeholder="アイコン名を入力" id="iconInput">
+            <button id="addLink" class="add-button">追加</button>
         </div>
     </div>
 
-    <script>
-        const openBtn = document.getElementById('openOverlay');
-        const closeBtn = document.getElementById('closeOverlay');
-        const overlay = document.getElementById('overlay');
+    <script src="script.js"></script>
 
-        openBtn.addEventListener('click', () => {
-            overlay.style.display = 'flex';
-        });
-
-        closeBtn.addEventListener('click', () => {
-            overlay.style.display = 'none';
-        });
-
-        // click outside to close
-        overlay.addEventListener('click', e => {
-            if (e.target === overlay) {
-                overlay.style.display = 'none';
-            }
-        });
-    </script>
 </body>
 
 </html>
