@@ -4,6 +4,21 @@ const overlay = document.getElementById('overlay');
 const addLinkBtn = document.getElementById('addLink');
 const linkList = document.getElementById('linkList');
 
+window.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMの準備が整いました！');
+    // ここでlocalStorageからデータを読み込んで表示する処理などを書く
+    const currentData = JSON.parse(localStorage.getItem('kumasite-urlList')) || [];
+    currentData.forEach(item => {
+        const listItem = document.createElement('div');
+        listItem.innerHTML = `
+        <a href="${item.url}" target="_blank" class="app">
+        <i class="fa-solid ${item.icon}"></i>
+        <p class="title">${item.name}</p>
+        </a>
+        `;
+        linkList.appendChild(listItem);
+    });
+});
 
 openBtn.addEventListener('click', () => {
     overlay.style.display = 'flex';
@@ -47,6 +62,16 @@ addLinkBtn.addEventListener('click', () => {
 
         // 4. 画面に追加
         linkList.appendChild(listItem);
+
+        // 1. 現在のリストを取得（空なら新しい配列 [] を用意）
+        const currentData = JSON.parse(localStorage.getItem('kumasite-urlList')) || [];
+
+        // 2. 新しいデータを追加
+        const newEntry = { id: Date.now(), name: itemData.name, url: itemData.url, icon: itemData.icon };
+        currentData.push(newEntry);
+
+        // 3. まるごと保存（これで「追加」された状態になる）
+        localStorage.setItem('kumasite-urlList', JSON.stringify(currentData));
 
         // 5. 入力欄をすべてリセット
         document.querySelectorAll('input').forEach(input => input.value = '');
