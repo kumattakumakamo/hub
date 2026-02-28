@@ -3,6 +3,8 @@ const closeBtn = document.getElementById('closeOverlay');
 const overlay = document.getElementById('overlay');
 const addLinkBtn = document.getElementById('addLink');
 const linkList = document.getElementById('linkList');
+const originalMenu = document.getElementById('originalMenu');
+let isdefaultmenu = false;
 
 window.addEventListener('DOMContentLoaded', () => {
     console.log('DOMの準備が整いました！');
@@ -75,5 +77,34 @@ addLinkBtn.addEventListener('click', () => {
 
         // 5. 入力欄をすべてリセット
         document.querySelectorAll('input').forEach(input => input.value = '');
+    }
+});
+
+document.addEventListener('contextmenu', event => {
+    if (!isdefaultmenu) {
+        event.preventDefault(); // 右クリックメニューを表示しない
+        console.log('右クリックされましたが、メニューは表示されません');
+        originalMenu.style.display = 'flex'; // カスタムメニューを表示
+        originalMenu.style.left = `${event.pageX}px`; // カスタムメニューの位置を設定
+        originalMenu.style.top = `${event.pageY}px`;
+    }
+});
+document.addEventListener('click', event => {
+    if (!event.target.closest('#originalMenu')) {
+        originalMenu.style.display = 'none';
+
+    }
+    if (event.target.id === 'defaultmenu') {
+        originalMenu.style.display = 'none';
+        isdefaultmenu = true;
+        const menuEvent = new MouseEvent('contextmenu', {
+            bubbles: true,
+            cancelable: true,
+            clientX: event.clientX,
+            clientY: event.clientY
+        });
+
+        // 標的の要素（あるいはdocument）に対してイベントを発火させる
+        document.dispatchEvent(menuEvent);
     }
 });

@@ -5,7 +5,29 @@ body {
 a {
     text-decoration: none;
     /* 下線を消す */
+    color: #f96f8d;
 }
+
+a.a-fff {
+
+    color: #fff;
+    padding-left: 10px;
+    padding-right: 10px;
+    width: 100%;
+}
+
+.omli {
+    padding: 6px;
+}
+
+.omli:hover {
+    background-color: #c7425f;
+    color: #fff;
+    border-radius: 4px;
+
+}
+
+
 
 .app {
     margin-top: 4px;
@@ -90,4 +112,19 @@ a {
 
 .yokonarabi {
     display: flex;
+}
+
+.original-menu {
+    background-color: #f96f8d;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 60%;
+    padding: 12px;
+    padding-left: 2px;
+    padding-right: 2px;
+    flex-flow: column;
+    display: none;
+    /* hidden by default */
+    position: fixed;
+    list-style: none;
 }
