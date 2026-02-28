@@ -24,6 +24,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 openBtn.addEventListener('click', () => {
     overlay.style.display = 'flex';
+    originalMenu.style.display = 'none'; // カスタムメニューを閉じる
 });
 
 closeBtn.addEventListener('click', () => {
