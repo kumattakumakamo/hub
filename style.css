@@ -9,18 +9,16 @@ a {
 }
 
 a.a-fff {
-
+    display: block;
+    /* block要素にして親のliを埋める */
     color: #fff;
-    padding-left: 10px;
-    padding-right: 10px;
-    width: 100%;
-}
 
-.omli {
     padding: 6px;
 }
 
-.omli:hover {
+
+
+a.a-fff:hover {
     background-color: #c7425f;
     color: #fff;
     border-radius: 4px;
