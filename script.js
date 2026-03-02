@@ -432,6 +432,7 @@ const THEMES = {
     cyan: { label: '水色', icon: '#6fe2f9', hover: '#42b1c7', bg1: '#e0f9fd', bg2: '#f0fbfd', bg3: '#f0fdff' },
     blue: { label: '青', icon: '#6f9df9', hover: '#426fc7', bg1: '#e0eafd', bg2: '#f0f5fd', bg3: '#f0f6ff' },
     purple: { label: '紫', icon: '#cb6ff9', hover: '#9a42c7', bg1: '#f3e0fd', bg2: '#f8f0fd', bg3: '#f9f0ff' },
+    gray: { label: 'グレー', icon: '#9e9e9e', hover: '#707070', bg1: '#f0f0f0', bg2: '#f8f8f8', bg3: '#fafafa' },
 };
 
 let currentThemeKey = localStorage.getItem('kumasite-theme') || 'pink';
