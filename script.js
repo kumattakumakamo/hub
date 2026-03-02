@@ -243,21 +243,26 @@ window.addEventListener('DOMContentLoaded', () => {
 // ========== オーバーレイ ==========
 // 開くボタンでオーバーレイを表示
 openBtn.addEventListener('click', () => {
+    document.querySelectorAll('input').forEach(input => input.value = '');
     overlay.style.display = 'flex';
     originalMenu.style.display = 'none';
 });
 // 閉じるボタンでオーバーレイを閉じる
 closeBtn.addEventListener('click', () => {
     overlay.style.display = 'none';
+    editingAppId = null;
     resetIconPicker();
 });
+// アイコン選択のリセット
 function resetIconPicker() {
     document.querySelectorAll('.icon-choice').forEach(b => b.classList.remove('selected'));
     document.getElementById('iconInput').value = '';
 }
+// オーバーレイの背景クリックでオーバーレイを閉じる
 overlay.addEventListener('click', e => {
     if (e.target === overlay) {
         overlay.style.display = 'none';
+        editingAppId = null;
         resetIconPicker();
     }
 });
@@ -287,6 +292,9 @@ editOpenOverlay.addEventListener('click', () => {
         }
     });
     
+    document.querySelectorAll('.icon-choice').forEach(b => b.classList.remove('selected'));
+    document.querySelector(`.icon-choice[data-icon="${icon.value}"]`).classList.add('selected');
+    
     appEditMenu.style.display = 'none';
 });
 // 追加ボタンで新しいアイコンを作成して保存
@@ -313,11 +321,11 @@ addLinkBtn.addEventListener('click', () => {
                     appEl.querySelector('.title').textContent = name;
                 }
             }
+        }
+            document.querySelectorAll('input').forEach(input => input.value = '');
+            resetIconPicker();
             editingAppId = null;
             overlay.style.display = 'none';
-        }
-        
-        return
     }
 
     const name = document.getElementById('nameInput').value.trim();
