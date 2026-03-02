@@ -117,6 +117,98 @@ function createAppIcon({ id, name, url, icon, x, y }) {
     return appEl;
 }
 
+
+// ========== アイコンの自動整列（グリッドスナップ）==========
+
+// グリッドのセルサイズ（見えないマス目）
+const GRID_CELL_W = 100;
+const GRID_CELL_H = 100;
+const GRID_MARGIN_LEFT = 16;
+const GRID_MARGIN_TOP = 16;
+
+/**
+ * 座標 (x, y) を最も近いグリッドセルの左上座標にスナップして返す
+ */
+function snapToGrid(x, y) {
+    const col = Math.max(0, Math.round((x - GRID_MARGIN_LEFT) / GRID_CELL_W));
+    const row = Math.max(0, Math.round((y - GRID_MARGIN_TOP) / GRID_CELL_H));
+    return {
+        x: GRID_MARGIN_LEFT + col * GRID_CELL_W,
+        y: GRID_MARGIN_TOP + row * GRID_CELL_H,
+    };
+}
+
+/**
+ * 「アイコンの自動整列」:
+ * 全アイコンをそれぞれ現在位置から最も近いグリッドマスにスナップする。
+ * 複数のアイコンが同じマスに当たった場合は、近い方を優先し
+ * 残りを隣の空きマスに押し出す。
+ */
+function autoArrangeIcons() {
+    const icons = Array.from(document.querySelectorAll('a.app[data-id]'));
+
+    // 各アイコンの「希望グリッド座標」を計算
+    const assignments = icons.map(appEl => {
+        const x = parseFloat(appEl.style.left) || 0;
+        const y = parseFloat(appEl.style.top) || 0;
+        const snapped = snapToGrid(x, y);
+        const dist = Math.hypot(x - snapped.x, y - snapped.y);
+        return { appEl, x, y, sx: snapped.x, sy: snapped.y, dist };
+    });
+
+    // 近い順にソートして、先着優先でマスを確保
+    assignments.sort((a, b) => a.dist - b.dist);
+
+    // 使用済みマスを記録するセット（"col,row" 形式）
+    const occupied = new Set();
+
+    assignments.forEach(item => {
+        let col = Math.max(0, Math.round((item.sx - GRID_MARGIN_LEFT) / GRID_CELL_W));
+        let row = Math.max(0, Math.round((item.sy - GRID_MARGIN_TOP) / GRID_CELL_H));
+
+        // 衝突していたら螺旋状に空きマスを探す
+        if (occupied.has(`${col},${row}`)) {
+            let found = false;
+            outer: for (let radius = 1; radius < 50; radius++) {
+                // 上下左右→斜めの順で近傍を探索
+                const candidates = [];
+                for (let dc = -radius; dc <= radius; dc++) {
+                    for (let dr = -radius; dr <= radius; dr++) {
+                        if (Math.abs(dc) === radius || Math.abs(dr) === radius) {
+                            candidates.push([col + dc, row + dr]);
+                        }
+                    }
+                }
+                // 元の希望位置に近い順で試す
+                candidates.sort((a, b) => {
+                    const da = Math.hypot(a[0] - col, a[1] - row);
+                    const db = Math.hypot(b[0] - col, b[1] - row);
+                    return da - db;
+                });
+                for (const [c, r] of candidates) {
+                    if (c >= 0 && r >= 0 && !occupied.has(`${c},${r}`)) {
+                        col = c; row = r;
+                        found = true;
+                        break outer;
+                    }
+                }
+            }
+        }
+
+        occupied.add(`${col},${row}`);
+
+        const newLeft = GRID_MARGIN_LEFT + col * GRID_CELL_W;
+        const newTop = GRID_MARGIN_TOP + row * GRID_CELL_H;
+
+        item.appEl.style.transition = 'left 0.2s ease, top 0.2s ease';
+        item.appEl.style.left = newLeft + 'px';
+        item.appEl.style.top = newTop + 'px';
+        setTimeout(() => { item.appEl.style.transition = ''; }, 250);
+    });
+
+    setTimeout(() => savePositions(), 260);
+}
+
 // ========== 初期化 ==========
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -196,6 +288,10 @@ document.addEventListener('contextmenu', event => {
 document.addEventListener('click', event => {
     if (!event.target.closest('#originalMenu')) {
         originalMenu.style.display = 'none';
+    }
+    if (event.target.id === 'autoArrange') {
+        originalMenu.style.display = 'none';
+        autoArrangeIcons();
     }
     if (event.target.id === 'defaultmenu') {
         originalMenu.style.display = 'none';
