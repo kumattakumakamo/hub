@@ -359,6 +359,7 @@ document.getElementById('openAppLink').addEventListener('click', () => {
         window.open(appEl.href, '_blank');
     }
     appEditMenu.style.display = 'none';
+    editingAppId = null;
 });
 
 // ===== 右クリック判定 =====
