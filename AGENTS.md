@@ -4,15 +4,20 @@
 このリポジトリは静的Webアプリです。ルート直下の `index.html` がエントリーポイント、`script.js` がUI挙動（ドラッグ、右クリックメニュー、localStorage保存）、`style.css` が見た目を担当します。補助メモは `memo` にあります。新機能を追加する場合も、まず既存3ファイル内で責務を分離してから拡張してください。
 
 ## ビルド・テスト・開発コマンド
-ビルド工程はありません。ローカル確認は簡易サーバーで行います。
-Go Liveで行ってあります。
+ビルド工程はありません。ローカル確認は簡易サーバーで行います。  
+- `python3 -m http.server 5500`: ルートディレクトリを配信  
+- `http://localhost:5500`: ブラウザで動作確認  
+- `node --check script.js`: JavaScript の構文チェック
 
 ## コーディング規約と命名
 - JavaScript: `camelCase`（変数・関数）、定数は `UPPER_SNAKE_CASE`  
 - CSSクラス: `kebab-case`（例: `icon-choice`, `apply-color-btn`）  
 - インデント: 既存に合わせてスペース4つ  
 - localStorageキー: `kumasite-` プレフィックスを維持（例: `kumasite-urlList`）  
-- UI文言・コメントは既存方針に合わせて日本語中心で統一
+- UI文言・コメントは既存方針に合わせて日本語中心で統一  
+- `editingAppId` / `pendingDeleteAppId` は、メニューや確認オーバーレイを閉じる処理で必ず `null` に戻す  
+- デザイン実装は既存CSSの再利用を優先し、色・トーンは既存テーマに合わせる  
+- インラインスタイルの追加は原則避け、`style.css` に集約する
 
 ## テスト方針
 自動テスト基盤は未導入です。PRごとに手動で以下を確認してください。  
