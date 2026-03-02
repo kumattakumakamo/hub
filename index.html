@@ -80,6 +80,18 @@
         </div>
     </div>
 
+    <!-- delete confirm overlay -->
+    <div id="deleteConfirmOverlay" class="overlay">
+        <div class="overlay-content color-overlay-content">
+            <p class="color-overlay-title">削除の確認</p>
+            <p id="deleteConfirmMessage">このアプリを削除しますか？</p>
+            <div style="display:flex; gap:10px;">
+                <button id="cancelDelete" class="apply-color-btn" style="flex:1; background:#999;">キャンセル</button>
+                <button id="confirmDelete" class="apply-color-btn" style="flex:1;">削除</button>
+            </div>
+        </div>
+    </div>
+
     <ul id="originalMenu" class="original-menu">
         <li class="omli"><a href="#" id="autoArrange" class="a-fff">アイコンの自動整列</a></li>
         <li class="omli"><a href="#" id="openOverlay" class="a-fff">新規作成</a></li>

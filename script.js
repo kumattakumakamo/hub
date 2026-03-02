@@ -5,8 +5,13 @@ const addLinkBtn = document.getElementById('addLink');
 const originalMenu = document.getElementById('originalMenu');
 const appEditMenu = document.getElementById('appEditMenu');
 const editOpenOverlay = document.getElementById('editOpenOverlay');
+const deleteConfirmOverlay = document.getElementById('deleteConfirmOverlay');
+const deleteConfirmMessage = document.getElementById('deleteConfirmMessage');
+const cancelDeleteBtn = document.getElementById('cancelDelete');
+const confirmDeleteBtn = document.getElementById('confirmDelete');
 let isdefaultmenu = false;
 let editingAppId = null;
+let pendingDeleteAppId = null;
 
 // ========== デスクトップ式 自由配置ドラッグ ==========
 
@@ -350,22 +355,70 @@ addLinkBtn.addEventListener('click', () => {
     }
 });
 
-// ===== アプリを削除 =====
-document.getElementById('deleteLink').addEventListener('click', () => {
-    if (!editingAppId) return;
-    
-    // localStorage から削除
-    let data = JSON.parse(localStorage.getItem('kumasite-urlList')) || [];
-    data = data.filter(d => String(d.id) !== editingAppId);
+function openDeleteConfirm(appId) {
+    const normalizedId = String(appId || '');
+    if (!normalizedId) return;
+
+    pendingDeleteAppId = normalizedId;
+    const appEl = document.querySelector(`a.app[data-id="${normalizedId}"]`);
+    const appName = appEl?.querySelector('.title')?.textContent?.trim() || 'このアプリ';
+
+    deleteConfirmMessage.textContent = `「${appName}」を削除しますか？`;
+    deleteConfirmOverlay.style.display = 'flex';
+    appEditMenu.style.display = 'none';
+}
+
+function closeDeleteConfirm() {
+    deleteConfirmOverlay.style.display = 'none';
+    pendingDeleteAppId = null;
+}
+
+function deleteAppById(appId) {
+    const normalizedId = String(appId || '');
+    if (!normalizedId) return;
+
+    // localStorage から削除（壊れたデータでも落ちないように安全に扱う）
+    let data = [];
+    try {
+        const parsed = JSON.parse(localStorage.getItem('kumasite-urlList'));
+        data = Array.isArray(parsed) ? parsed : [];
+    } catch (_) {
+        data = [];
+    }
+    data = data.filter(d => String(d.id) !== normalizedId);
     localStorage.setItem('kumasite-urlList', JSON.stringify(data));
+
     // DOM から削除
-    const appEl = document.querySelector(`a.app[data-id="${editingAppId}"]`);
+    const appEl = document.querySelector(`a.app[data-id="${normalizedId}"]`);
     if (appEl) {
         appEl.remove();
     }
-    // メニューを閉じる
-    appEditMenu.style.display = 'none';
+
     editingAppId = null;
+    appEditMenu.style.display = 'none';
+}
+
+// ===== アプリを削除 =====
+document.getElementById('deleteLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (!editingAppId) return;
+    openDeleteConfirm(editingAppId);
+});
+
+cancelDeleteBtn.addEventListener('click', () => {
+    closeDeleteConfirm();
+});
+
+confirmDeleteBtn.addEventListener('click', () => {
+    if (!pendingDeleteAppId) return;
+    deleteAppById(pendingDeleteAppId);
+    closeDeleteConfirm();
+});
+
+deleteConfirmOverlay.addEventListener('click', (e) => {
+    if (e.target === deleteConfirmOverlay) {
+        closeDeleteConfirm();
+    }
 });
 
 // ===== 右クリック判定 =====
