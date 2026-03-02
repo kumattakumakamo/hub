@@ -162,3 +162,61 @@ a.a-fff:hover {
     background: #fff0f4;
     box-shadow: 0 0 0 3px rgba(249, 111, 141, 0.2);
 }
+
+/* ========== 色変更オーバーレイ ========== */
+.color-overlay-content {
+    min-width: 320px;
+    position: relative;
+}
+
+.color-overlay-title {
+    margin: 0 0 16px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+}
+
+.color-swatches {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.swatch {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+}
+
+.swatch:hover {
+    transform: scale(1.15);
+}
+
+.swatch.selected {
+    border-color: #333;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15);
+    transform: scale(1.15);
+}
+
+.apply-color-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background: #f96f8d;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.apply-color-btn:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}

@@ -326,3 +326,126 @@ document.addEventListener('click', event => {
         document.dispatchEvent(menuEvent);
     }
 });
+
+// ========== テーマカラー変更 ==========
+//
+// 設計: H のみ変数。S・V・H差はすべて固定値。
+// 各テーマのカラーセットは事前計算済みの静的テーブル。
+//
+// 色の構造（H差・S・Vは不変）:
+//   icon  : H+0.0,  S=55.4, V=97.6
+//   hover : H-0.1,  S=66.8, V=78.0
+//   bg1   : H-1.5,  S=11.5, V=99.2
+//   bg2   : H-0.8,  S=5.1,  V=99.2
+//   bg3   : H-3.0,  S=5.9,  V=100.0
+
+const THEMES = {
+    pink: { label: 'ピンク（現在）', icon: '#f96f8d', hover: '#c7425f', bg1: '#fde0e7', bg2: '#fdf0f3', bg3: '#fff0f4' },
+    red: { label: '赤', icon: '#f96f6f', hover: '#c74242', bg1: '#fde0e1', bg2: '#fdf0f0', bg3: '#fff0f1' },
+    yellow: { label: '黄', icon: '#f9dd6f', hover: '#c7ac42', bg1: '#fdf6e0', bg2: '#fdfaf0', bg3: '#fffbf0' },
+    green: { label: '緑', icon: '#6ff99d', hover: '#42c76e', bg1: '#e0fde9', bg2: '#f0fdf4', bg3: '#f0fff4' },
+    cyan: { label: '水色', icon: '#6fe2f9', hover: '#42b1c7', bg1: '#e0f9fd', bg2: '#f0fbfd', bg3: '#f0fdff' },
+    blue: { label: '青', icon: '#6f9df9', hover: '#426fc7', bg1: '#e0eafd', bg2: '#f0f5fd', bg3: '#f0f6ff' },
+    purple: { label: '紫', icon: '#cb6ff9', hover: '#9a42c7', bg1: '#f3e0fd', bg2: '#f8f0fd', bg3: '#f9f0ff' },
+};
+
+let currentThemeKey = localStorage.getItem('kumasite-theme') || 'pink';
+
+// テーマCSS注入用 <style> タグ
+const themeStyleEl = document.createElement('style');
+themeStyleEl.id = 'theme-style';
+document.head.appendChild(themeStyleEl);
+
+function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+/**
+ * テーマキーを受け取り、対応する色セットを <style> タグに注入して適用する
+ */
+function applyTheme(themeKey) {
+    const t = THEMES[themeKey];
+    if (!t) return;
+
+    themeStyleEl.textContent = `
+/* テーマ: ${t.label} */
+a { color: ${t.icon} !important; }
+a.a-fff { color: #fff !important; }
+a.a-fff:hover { background-color: ${t.hover} !important; color: #fff !important; }
+.app:hover { background: ${hexToRgba(t.icon, 0.12)} !important; }
+.icon { color: ${t.icon} !important; }
+.title { color: ${t.icon} !important; }
+.original-menu { background-color: ${t.icon} !important; }
+.icon-choice { color: ${t.icon} !important; background: ${t.bg2} !important; }
+.icon-choice:hover { background: ${t.bg1} !important; }
+.icon-choice.selected {
+    border-color: ${t.icon} !important;
+    background: ${t.bg3} !important;
+    box-shadow: 0 0 0 3px ${hexToRgba(t.icon, 0.2)} !important;
+}
+.apply-color-btn { background: ${t.icon}; }
+    `.trim();
+
+    currentThemeKey = themeKey;
+}
+
+// ページ読み込み時にテーマを復元
+window.addEventListener('DOMContentLoaded', () => {
+    applyTheme(currentThemeKey);
+    document.querySelectorAll('.swatch').forEach(s => {
+        s.classList.toggle('selected', s.dataset.theme === currentThemeKey);
+    });
+});
+
+// ---- 色変更オーバーレイのUI制御 ----
+
+const colorOverlay = document.getElementById('colorOverlay');
+const openColorBtn = document.getElementById('openColorOverlay');
+const closeColorBtn = document.getElementById('closeColorOverlay');
+const applyColorBtn = document.getElementById('applyColor');
+
+let pendingTheme = null;
+
+openColorBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    colorOverlay.style.display = 'flex';
+    originalMenu.style.display = 'none';
+    pendingTheme = null;
+    applyColorBtn.style.display = 'none';
+    document.querySelectorAll('.swatch').forEach(s => {
+        s.classList.toggle('selected', s.dataset.theme === currentThemeKey);
+    });
+});
+
+closeColorBtn.addEventListener('click', () => {
+    colorOverlay.style.display = 'none';
+    pendingTheme = null;
+});
+
+colorOverlay.addEventListener('click', e => {
+    if (e.target === colorOverlay) {
+        colorOverlay.style.display = 'none';
+        pendingTheme = null;
+    }
+});
+
+document.querySelectorAll('.swatch').forEach(swatch => {
+    swatch.addEventListener('click', () => {
+        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+        swatch.classList.add('selected');
+        pendingTheme = swatch.dataset.theme;
+        applyColorBtn.style.display = pendingTheme === currentThemeKey ? 'none' : 'block';
+        applyColorBtn.style.background = THEMES[pendingTheme].icon;
+    });
+});
+
+applyColorBtn.addEventListener('click', () => {
+    if (!pendingTheme) return;
+    applyTheme(pendingTheme);
+    localStorage.setItem('kumasite-theme', currentThemeKey);
+    colorOverlay.style.display = 'none';
+    pendingTheme = null;
+});
