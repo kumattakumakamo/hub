@@ -4,6 +4,7 @@ const overlay = document.getElementById('overlay');
 const addLinkBtn = document.getElementById('addLink');
 const originalMenu = document.getElementById('originalMenu');
 const appEditMenu = document.getElementById('appEditMenu');
+const openAppLink = document.getElementById('openAppLink');
 const editOpenOverlay = document.getElementById('editOpenOverlay');
 const deleteConfirmOverlay = document.getElementById('deleteConfirmOverlay');
 const deleteConfirmMessage = document.getElementById('deleteConfirmMessage');
@@ -389,6 +390,18 @@ function deleteAppById(appId) {
     }
     data = data.filter(d => String(d.id) !== normalizedId);
     localStorage.setItem('kumasite-urlList', JSON.stringify(data));
+// ===== アプリを開く =====
+document.getElementById('openAppLink').addEventListener('click', () => {
+    if (!editingAppId) return;
+    const appEl = document.querySelector(`a.app[data-id="${editingAppId}"]`);
+    if (appEl) {
+        window.open(appEl.href, '_blank');
+    }
+    appEditMenu.style.display = 'none';
+    editingAppId = null;
+});
+
+// ===== 右クリック判定 =====
 
     // DOM から削除
     const appEl = document.querySelector(`a.app[data-id="${normalizedId}"]`);
