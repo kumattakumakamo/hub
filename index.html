@@ -25,14 +25,66 @@
             <span id="closeOverlay" class="close-button">&times;</span>
             <input type="text" placeholder="名前を入力" id="nameInput">
             <input type="text" placeholder="URLを入力" id="urlInput">
-            <input type="text" placeholder="アイコン名を入力" id="iconInput">
+            <!-- アイコン選択グリッド -->
+            <p class="icon-picker-label">アイコンを選択</p>
+            <div class="icon-picker" id="iconPicker">
+                <button type="button" class="icon-choice" data-icon="fa-globe">
+                    <i class="fa-solid fa-globe"></i>
+                    <span>ウェブ</span>
+                </button>
+                <button type="button" class="icon-choice" data-icon="fa-envelope">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span>メール</span>
+                </button>
+                <button type="button" class="icon-choice" data-icon="fa-folder">
+                    <i class="fa-solid fa-folder"></i>
+                    <span>フォルダ</span>
+                </button>
+                <button type="button" class="icon-choice" data-icon="fa-music">
+                    <i class="fa-solid fa-music"></i>
+                    <span>音楽</span>
+                </button>
+                <button type="button" class="icon-choice" data-icon="fa-video">
+                    <i class="fa-solid fa-video"></i>
+                    <span>動画</span>
+                </button>
+                <button type="button" class="icon-choice" data-icon="fa-image">
+                    <i class="fa-solid fa-image"></i>
+                    <span>画像</span>
+                </button>
+                <button type="button" class="icon-choice" data-icon="fa-gear">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>設定</span>
+                </button>
+            </div>
+            <input type="hidden" id="iconInput">
             <button id="addLink" class="add-button">追加</button>
         </div>
     </div>
 
+    <!-- color overlay -->
+    <div id="colorOverlay" class="overlay">
+        <div class="overlay-content color-overlay-content">
+            <span id="closeColorOverlay" class="close-button">&times;</span>
+            <p class="color-overlay-title">テーマカラー</p>
+            <div class="color-swatches" id="colorSwatches">
+                <button class="swatch selected" data-theme="pink" style="background:#f96f8d;" title="ピンク（現在）"></button>
+                <button class="swatch" data-theme="red" style="background:#f96f6f;" title="赤"></button>
+                <button class="swatch" data-theme="yellow" style="background:#f9dd6f;" title="黄"></button>
+                <button class="swatch" data-theme="green" style="background:#6ff99d;" title="緑"></button>
+                <button class="swatch" data-theme="cyan" style="background:#6fe2f9;" title="水色"></button>
+                <button class="swatch" data-theme="blue" style="background:#6f9df9;" title="青"></button>
+                <button class="swatch" data-theme="purple" style="background:#cb6ff9;" title="紫"></button>
+            </div>
+            <button id="applyColor" class="apply-color-btn" style="display:none;">適用</button>
+        </div>
+    </div>
+
     <ul id="originalMenu" class="original-menu">
+        <li class="omli"><a href="#" id="autoArrange" class="a-fff">アイコンの自動整列</a></li>
         <li class="omli"><a href="#" id="openOverlay" class="a-fff">新規作成</a></li>
         <li class="omli"><a href="#" id="deleteLink" class="a-fff">削除</a></li>
+        <li class="omli"><a href="#" id="openColorOverlay" class="a-fff">色の変更</a></li>
         <li class="omli"><a href="#" id="defaultmenu" class="a-fff">デフォルトの右クリックメニュー</a></li>
     </ul>
 

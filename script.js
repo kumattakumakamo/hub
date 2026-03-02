@@ -120,6 +120,98 @@ function createAppIcon({ id, name, url, icon, x, y }) {
     return appEl;
 }
 
+
+// ========== アイコンの自動整列（グリッドスナップ）==========
+
+// グリッドのセルサイズ（見えないマス目）
+const GRID_CELL_W = 100;
+const GRID_CELL_H = 100;
+const GRID_MARGIN_LEFT = 16;
+const GRID_MARGIN_TOP = 16;
+
+/**
+ * 座標 (x, y) を最も近いグリッドセルの左上座標にスナップして返す
+ */
+function snapToGrid(x, y) {
+    const col = Math.max(0, Math.round((x - GRID_MARGIN_LEFT) / GRID_CELL_W));
+    const row = Math.max(0, Math.round((y - GRID_MARGIN_TOP) / GRID_CELL_H));
+    return {
+        x: GRID_MARGIN_LEFT + col * GRID_CELL_W,
+        y: GRID_MARGIN_TOP + row * GRID_CELL_H,
+    };
+}
+
+/**
+ * 「アイコンの自動整列」:
+ * 全アイコンをそれぞれ現在位置から最も近いグリッドマスにスナップする。
+ * 複数のアイコンが同じマスに当たった場合は、近い方を優先し
+ * 残りを隣の空きマスに押し出す。
+ */
+function autoArrangeIcons() {
+    const icons = Array.from(document.querySelectorAll('a.app[data-id]'));
+
+    // 各アイコンの「希望グリッド座標」を計算
+    const assignments = icons.map(appEl => {
+        const x = parseFloat(appEl.style.left) || 0;
+        const y = parseFloat(appEl.style.top) || 0;
+        const snapped = snapToGrid(x, y);
+        const dist = Math.hypot(x - snapped.x, y - snapped.y);
+        return { appEl, x, y, sx: snapped.x, sy: snapped.y, dist };
+    });
+
+    // 近い順にソートして、先着優先でマスを確保
+    assignments.sort((a, b) => a.dist - b.dist);
+
+    // 使用済みマスを記録するセット（"col,row" 形式）
+    const occupied = new Set();
+
+    assignments.forEach(item => {
+        let col = Math.max(0, Math.round((item.sx - GRID_MARGIN_LEFT) / GRID_CELL_W));
+        let row = Math.max(0, Math.round((item.sy - GRID_MARGIN_TOP) / GRID_CELL_H));
+
+        // 衝突していたら螺旋状に空きマスを探す
+        if (occupied.has(`${col},${row}`)) {
+            let found = false;
+            outer: for (let radius = 1; radius < 50; radius++) {
+                // 上下左右→斜めの順で近傍を探索
+                const candidates = [];
+                for (let dc = -radius; dc <= radius; dc++) {
+                    for (let dr = -radius; dr <= radius; dr++) {
+                        if (Math.abs(dc) === radius || Math.abs(dr) === radius) {
+                            candidates.push([col + dc, row + dr]);
+                        }
+                    }
+                }
+                // 元の希望位置に近い順で試す
+                candidates.sort((a, b) => {
+                    const da = Math.hypot(a[0] - col, a[1] - row);
+                    const db = Math.hypot(b[0] - col, b[1] - row);
+                    return da - db;
+                });
+                for (const [c, r] of candidates) {
+                    if (c >= 0 && r >= 0 && !occupied.has(`${c},${r}`)) {
+                        col = c; row = r;
+                        found = true;
+                        break outer;
+                    }
+                }
+            }
+        }
+
+        occupied.add(`${col},${row}`);
+
+        const newLeft = GRID_MARGIN_LEFT + col * GRID_CELL_W;
+        const newTop = GRID_MARGIN_TOP + row * GRID_CELL_H;
+
+        item.appEl.style.transition = 'left 0.2s ease, top 0.2s ease';
+        item.appEl.style.left = newLeft + 'px';
+        item.appEl.style.top = newTop + 'px';
+        setTimeout(() => { item.appEl.style.transition = ''; }, 250);
+    });
+
+    setTimeout(() => savePositions(), 260);
+}
+
 // ========== 初期化 ==========
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -157,10 +249,28 @@ openBtn.addEventListener('click', () => {
 // 閉じるボタンでオーバーレイを閉じる
 closeBtn.addEventListener('click', () => {
     overlay.style.display = 'none';
+    resetIconPicker();
 });
-// オーバーレイの背景クリックで閉じる
+function resetIconPicker() {
+    document.querySelectorAll('.icon-choice').forEach(b => b.classList.remove('selected'));
+    document.getElementById('iconInput').value = '';
+}
 overlay.addEventListener('click', e => {
-    if (e.target === overlay) overlay.style.display = 'none';
+    if (e.target === overlay) {
+        overlay.style.display = 'none';
+        resetIconPicker();
+    }
+});
+
+// ========== アイコン選択ピッカー ==========
+document.querySelectorAll('.icon-choice').forEach(btn => {
+    btn.addEventListener('click', () => {
+        // 選択状態を切り替え
+        document.querySelectorAll('.icon-choice').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        // hidden input に値をセット
+        document.getElementById('iconInput').value = btn.dataset.icon;
+    });
 });
 editOpenOverlay.addEventListener('click', () => {
     overlay.style.display = 'flex';
@@ -227,6 +337,7 @@ addLinkBtn.addEventListener('click', () => {
         localStorage.setItem('kumasite-urlList', JSON.stringify(currentData));
 
         document.querySelectorAll('input').forEach(input => input.value = '');
+        resetIconPicker();
         overlay.style.display = 'none';
     }
 });
@@ -265,6 +376,10 @@ document.addEventListener('click', event => {
     if (!event.target.closest('#appEditMenu')) {
         appEditMenu.style.display = 'none';
     }
+    if (event.target.id === 'autoArrange') {
+        originalMenu.style.display = 'none';
+        autoArrangeIcons();
+    }
     if (event.target.id === 'defaultmenu') {
         originalMenu.style.display = 'none';
         isdefaultmenu = true;
@@ -276,4 +391,126 @@ document.addEventListener('click', event => {
         });
         document.dispatchEvent(menuEvent);
     }
+});
+// ========== テーマカラー変更 ==========
+//
+// 設計: H のみ変数。S・V・H差はすべて固定値。
+// 各テーマのカラーセットは事前計算済みの静的テーブル。
+//
+// 色の構造（H差・S・Vは不変）:
+//   icon  : H+0.0,  S=55.4, V=97.6
+//   hover : H-0.1,  S=66.8, V=78.0
+//   bg1   : H-1.5,  S=11.5, V=99.2
+//   bg2   : H-0.8,  S=5.1,  V=99.2
+//   bg3   : H-3.0,  S=5.9,  V=100.0
+
+const THEMES = {
+    pink: { label: 'ピンク（現在）', icon: '#f96f8d', hover: '#c7425f', bg1: '#fde0e7', bg2: '#fdf0f3', bg3: '#fff0f4' },
+    red: { label: '赤', icon: '#f96f6f', hover: '#c74242', bg1: '#fde0e1', bg2: '#fdf0f0', bg3: '#fff0f1' },
+    yellow: { label: '黄', icon: '#f9dd6f', hover: '#c7ac42', bg1: '#fdf6e0', bg2: '#fdfaf0', bg3: '#fffbf0' },
+    green: { label: '緑', icon: '#6ff99d', hover: '#42c76e', bg1: '#e0fde9', bg2: '#f0fdf4', bg3: '#f0fff4' },
+    cyan: { label: '水色', icon: '#6fe2f9', hover: '#42b1c7', bg1: '#e0f9fd', bg2: '#f0fbfd', bg3: '#f0fdff' },
+    blue: { label: '青', icon: '#6f9df9', hover: '#426fc7', bg1: '#e0eafd', bg2: '#f0f5fd', bg3: '#f0f6ff' },
+    purple: { label: '紫', icon: '#cb6ff9', hover: '#9a42c7', bg1: '#f3e0fd', bg2: '#f8f0fd', bg3: '#f9f0ff' },
+};
+
+let currentThemeKey = localStorage.getItem('kumasite-theme') || 'pink';
+
+// テーマCSS注入用 <style> タグ
+const themeStyleEl = document.createElement('style');
+themeStyleEl.id = 'theme-style';
+document.head.appendChild(themeStyleEl);
+
+function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+/**
+ * テーマキーを受け取り、対応する色セットを <style> タグに注入して適用する
+ */
+function applyTheme(themeKey) {
+    const t = THEMES[themeKey];
+    if (!t) return;
+
+    themeStyleEl.textContent = `
+/* テーマ: ${t.label} */
+a { color: ${t.icon} !important; }
+a.a-fff { color: #fff !important; }
+a.a-fff:hover { background-color: ${t.hover} !important; color: #fff !important; }
+.app:hover { background: ${hexToRgba(t.icon, 0.12)} !important; }
+.icon { color: ${t.icon} !important; }
+.title { color: ${t.icon} !important; }
+.original-menu { background-color: ${t.icon} !important; }
+.icon-choice { color: ${t.icon} !important; background: ${t.bg2} !important; }
+.icon-choice:hover { background: ${t.bg1} !important; }
+.icon-choice.selected {
+    border-color: ${t.icon} !important;
+    background: ${t.bg3} !important;
+    box-shadow: 0 0 0 3px ${hexToRgba(t.icon, 0.2)} !important;
+}
+.apply-color-btn { background: ${t.icon}; }
+    `.trim();
+
+    currentThemeKey = themeKey;
+}
+
+// ページ読み込み時にテーマを復元
+window.addEventListener('DOMContentLoaded', () => {
+    applyTheme(currentThemeKey);
+    document.querySelectorAll('.swatch').forEach(s => {
+        s.classList.toggle('selected', s.dataset.theme === currentThemeKey);
+    });
+});
+
+// ---- 色変更オーバーレイのUI制御 ----
+
+const colorOverlay = document.getElementById('colorOverlay');
+const openColorBtn = document.getElementById('openColorOverlay');
+const closeColorBtn = document.getElementById('closeColorOverlay');
+const applyColorBtn = document.getElementById('applyColor');
+
+let pendingTheme = null;
+
+openColorBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    colorOverlay.style.display = 'flex';
+    originalMenu.style.display = 'none';
+    pendingTheme = null;
+    applyColorBtn.style.display = 'none';
+    document.querySelectorAll('.swatch').forEach(s => {
+        s.classList.toggle('selected', s.dataset.theme === currentThemeKey);
+    });
+});
+
+closeColorBtn.addEventListener('click', () => {
+    colorOverlay.style.display = 'none';
+    pendingTheme = null;
+});
+
+colorOverlay.addEventListener('click', e => {
+    if (e.target === colorOverlay) {
+        colorOverlay.style.display = 'none';
+        pendingTheme = null;
+    }
+});
+
+document.querySelectorAll('.swatch').forEach(swatch => {
+    swatch.addEventListener('click', () => {
+        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+        swatch.classList.add('selected');
+        pendingTheme = swatch.dataset.theme;
+        applyColorBtn.style.display = pendingTheme === currentThemeKey ? 'none' : 'block';
+        applyColorBtn.style.background = THEMES[pendingTheme].icon;
+    });
+});
+
+applyColorBtn.addEventListener('click', () => {
+    if (!pendingTheme) return;
+    applyTheme(pendingTheme);
+    localStorage.setItem('kumasite-theme', currentThemeKey);
+    colorOverlay.style.display = 'none';
+    pendingTheme = null;
 });
