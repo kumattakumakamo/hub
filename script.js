@@ -248,6 +248,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // ========== オーバーレイ ==========
 // 開くボタンでオーバーレイを表示
 openBtn.addEventListener('click', () => {
+    editingAppId = null;
     document.querySelectorAll('input').forEach(input => input.value = '');
     overlay.style.display = 'flex';
     originalMenu.style.display = 'none';
@@ -371,6 +372,7 @@ function openDeleteConfirm(appId) {
 function closeDeleteConfirm() {
     deleteConfirmOverlay.style.display = 'none';
     pendingDeleteAppId = null;
+    editingAppId = null;
 }
 
 function deleteAppById(appId) {
@@ -443,6 +445,7 @@ document.addEventListener('contextmenu', event => {
             originalMenu.style.display = 'flex';
             originalMenu.style.left = `${event.pageX}px`;
             originalMenu.style.top = `${event.pageY}px`;
+            editingAppId = null;
         }
     }
 });
@@ -453,6 +456,7 @@ document.addEventListener('click', event => {
     }
     if (!event.target.closest('#appEditMenu')) {
         appEditMenu.style.display = 'none';
+        editingAppId = null;
     }
     if (event.target.id === 'autoArrange') {
         originalMenu.style.display = 'none';
