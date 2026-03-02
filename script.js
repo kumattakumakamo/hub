@@ -4,6 +4,7 @@ const overlay = document.getElementById('overlay');
 const addLinkBtn = document.getElementById('addLink');
 const originalMenu = document.getElementById('originalMenu');
 const appEditMenu = document.getElementById('appEditMenu');
+const openAppLink = document.getElementById('openAppLink');
 const editOpenOverlay = document.getElementById('editOpenOverlay');
 let isdefaultmenu = false;
 let editingAppId = null;
@@ -348,6 +349,16 @@ addLinkBtn.addEventListener('click', () => {
         resetIconPicker();
         overlay.style.display = 'none';
     }
+});
+
+// ===== アプリを開く =====
+document.getElementById('openAppLink').addEventListener('click', () => {
+    if (!editingAppId) return;
+    const appEl = document.querySelector(`a.app[data-id="${editingAppId}"]`);
+    if (appEl) {
+        window.open(appEl.href, '_blank');
+    }
+    appEditMenu.style.display = 'none';
 });
 
 // ===== 右クリック判定 =====
