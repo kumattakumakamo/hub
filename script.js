@@ -3,7 +3,10 @@ const closeBtn = document.getElementById('closeOverlay');
 const overlay = document.getElementById('overlay');
 const addLinkBtn = document.getElementById('addLink');
 const originalMenu = document.getElementById('originalMenu');
+const appEditMenu = document.getElementById('appEditMenu');
+const editOpenOverlay = document.getElementById('editOpenOverlay');
 let isdefaultmenu = false;
+let editingAppId = null;
 
 // ========== デスクトップ式 自由配置ドラッグ ==========
 
@@ -238,25 +241,28 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ========== オーバーレイ ==========
-
+// 開くボタンでオーバーレイを表示
 openBtn.addEventListener('click', () => {
+    document.querySelectorAll('input').forEach(input => input.value = '');
     overlay.style.display = 'flex';
     originalMenu.style.display = 'none';
 });
-
+// 閉じるボタンでオーバーレイを閉じる
 closeBtn.addEventListener('click', () => {
     overlay.style.display = 'none';
+    editingAppId = null;
     resetIconPicker();
 });
-
+// アイコン選択のリセット
 function resetIconPicker() {
     document.querySelectorAll('.icon-choice').forEach(b => b.classList.remove('selected'));
     document.getElementById('iconInput').value = '';
 }
-
+// オーバーレイの背景クリックでオーバーレイを閉じる
 overlay.addEventListener('click', e => {
     if (e.target === overlay) {
         overlay.style.display = 'none';
+        editingAppId = null;
         resetIconPicker();
     }
 });
@@ -271,8 +277,57 @@ document.querySelectorAll('.icon-choice').forEach(btn => {
         document.getElementById('iconInput').value = btn.dataset.icon;
     });
 });
+editOpenOverlay.addEventListener('click', () => {
+    overlay.style.display = 'flex';
+    const name = document.getElementById('nameInput');
+    const url = document.getElementById('urlInput');
+    const icon = document.getElementById('iconInput');
 
+    let a = editingAppId;
+    JSON.parse(localStorage.getItem('kumasite-urlList')).forEach(d => {
+        if (String(d.id) === a) {
+            name.value = d.name;
+            url.value = d.url;
+            icon.value = d.icon;
+        }
+    });
+    
+    document.querySelectorAll('.icon-choice').forEach(b => b.classList.remove('selected'));
+    document.querySelector(`.icon-choice[data-icon="${icon.value}"]`).classList.add('selected');
+    
+    appEditMenu.style.display = 'none';
+});
+// 追加ボタンで新しいアイコンを作成して保存
 addLinkBtn.addEventListener('click', () => {
+
+    if (editingAppId) {
+        const name = document.getElementById('nameInput').value.trim();
+        const url = document.getElementById('urlInput').value.trim();
+        const icon = document.getElementById('iconInput').value.trim();
+        
+        if (name && url && icon) {
+            const data = JSON.parse(localStorage.getItem('kumasite-urlList')) || [];
+            const index = data.findIndex(d => String(d.id) === editingAppId);
+            if (index !== -1) {
+                data[index].name = name;
+                data[index].url = url;
+                data[index].icon = icon;
+                localStorage.setItem('kumasite-urlList', JSON.stringify(data));
+
+                const appEl = document.querySelector(`a.app[data-id="${editingAppId}"]`);
+                if (appEl) {
+                    appEl.href = url;
+                    appEl.querySelector('.icon').className = `fa-solid ${icon} icon`;
+                    appEl.querySelector('.title').textContent = name;
+                }
+            }
+        }
+            document.querySelectorAll('input').forEach(input => input.value = '');
+            resetIconPicker();
+            editingAppId = null;
+            overlay.style.display = 'none';
+    }
+
     const name = document.getElementById('nameInput').value.trim();
     const url = document.getElementById('urlInput').value.trim();
     const icon = document.getElementById('iconInput').value.trim();
@@ -295,20 +350,39 @@ addLinkBtn.addEventListener('click', () => {
     }
 });
 
-// ========== カスタム右クリックメニュー ==========
+// ===== 右クリック判定 =====
 
 document.addEventListener('contextmenu', event => {
+    if (!event.target.closest('#originalMenu')) {
+        originalMenu.style.display = 'none';
+    }
+    if (!event.target.closest('#appEditMenu')) {
+        appEditMenu.style.display = 'none';
+    }
+    const appEl = event.target.closest('.app');
     if (!isdefaultmenu) {
-        event.preventDefault();
-        originalMenu.style.display = 'flex';
-        originalMenu.style.left = `${event.pageX}px`;
-        originalMenu.style.top = `${event.pageY}px`;
+        // app上での右クリックかどうか
+        if (appEl) {
+            event.preventDefault();
+            appEditMenu.style.display = 'flex';
+            appEditMenu.style.left = `${event.pageX}px`;
+            appEditMenu.style.top = `${event.pageY}px`;
+            editingAppId = appEl.dataset.id;
+        } else {
+            event.preventDefault();
+            originalMenu.style.display = 'flex';
+            originalMenu.style.left = `${event.pageX}px`;
+            originalMenu.style.top = `${event.pageY}px`;
+        }
     }
 });
 
 document.addEventListener('click', event => {
     if (!event.target.closest('#originalMenu')) {
         originalMenu.style.display = 'none';
+    }
+    if (!event.target.closest('#appEditMenu')) {
+        appEditMenu.style.display = 'none';
     }
     if (event.target.id === 'autoArrange') {
         originalMenu.style.display = 'none';
@@ -326,7 +400,6 @@ document.addEventListener('click', event => {
         document.dispatchEvent(menuEvent);
     }
 });
-
 // ========== テーマカラー変更 ==========
 //
 // 設計: H のみ変数。S・V・H差はすべて固定値。
