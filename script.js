@@ -2,98 +2,200 @@ const openBtn = document.getElementById('openOverlay');
 const closeBtn = document.getElementById('closeOverlay');
 const overlay = document.getElementById('overlay');
 const addLinkBtn = document.getElementById('addLink');
-const linkList = document.getElementById('linkList');
 const originalMenu = document.getElementById('originalMenu');
 let isdefaultmenu = false;
 
-window.addEventListener('DOMContentLoaded', () => {
-    console.log('DOMの準備が整いました！');
-    // ここでlocalStorageからデータを読み込んで表示する処理などを書く
-    const currentData = JSON.parse(localStorage.getItem('kumasite-urlList')) || [];
-    currentData.forEach(item => {
-        const listItem = document.createElement('div');
-        listItem.innerHTML = `
-        <a href="${item.url}" target="_blank" class="app">
-        <i class="fa-solid ${item.icon}"></i>
-        <p class="title">${item.name}</p>
-        </a>
-        `;
-        linkList.appendChild(listItem);
+// ========== デスクトップ式 自由配置ドラッグ ==========
+
+let dragState = null;
+
+/**
+ * a.app 要素にデスクトップアイコン機能を付与する
+ * - シングルクリック → ドラッグ可能（リンクは開かない）
+ * - ダブルクリック → リンクを開く
+ */
+function makeDesktopIcon(appEl) {
+    // シングルクリックでリンクが開かないようにする
+    appEl.addEventListener('click', (e) => {
+        e.preventDefault();
     });
+
+    // ダブルクリックでリンクを開く
+    appEl.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.open(appEl.getAttribute('href'), '_blank');
+    });
+
+    // mousedown でドラッグ開始
+    appEl.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+
+        const rect = appEl.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+
+        dragState = { appEl, offsetX, offsetY };
+
+        appEl.style.cursor = 'grabbing';
+        appEl.style.opacity = '0.8';
+        appEl.style.zIndex = '9999';
+        appEl.style.transform = 'scale(1.1)';
+    });
+}
+
+document.addEventListener('mousemove', (e) => {
+    if (!dragState) return;
+    const { appEl, offsetX, offsetY } = dragState;
+
+    const newLeft = Math.max(0, Math.min(window.innerWidth - appEl.offsetWidth, e.clientX - offsetX));
+    const newTop = Math.max(0, Math.min(window.innerHeight - appEl.offsetHeight, e.clientY - offsetY));
+
+    appEl.style.left = newLeft + 'px';
+    appEl.style.top = newTop + 'px';
 });
+
+document.addEventListener('mouseup', () => {
+    if (!dragState) return;
+    const { appEl } = dragState;
+
+    appEl.style.cursor = 'grab';
+    appEl.style.opacity = '1';
+    appEl.style.zIndex = '100';
+    appEl.style.transform = '';
+
+    savePositions();
+    dragState = null;
+});
+
+/**
+ * 全アイコンの位置を localStorage に保存
+ */
+function savePositions() {
+    // 動的アイコン
+    const data = JSON.parse(localStorage.getItem('kumasite-urlList')) || [];
+    document.querySelectorAll('a.app[data-id]').forEach(appEl => {
+        const id = appEl.dataset.id;
+        const entry = data.find(d => String(d.id) === id);
+        if (entry) {
+            entry.x = parseFloat(appEl.style.left) || 0;
+            entry.y = parseFloat(appEl.style.top) || 0;
+        }
+    });
+    localStorage.setItem('kumasite-urlList', JSON.stringify(data));
+
+    // 静的アイコン（data-id が "static-" で始まるもの）
+    const staticPos = JSON.parse(localStorage.getItem('kumasite-staticPos')) || {};
+    document.querySelectorAll('a.app[data-id^="static-"]').forEach(appEl => {
+        staticPos[appEl.dataset.id] = {
+            x: parseFloat(appEl.style.left) || 0,
+            y: parseFloat(appEl.style.top) || 0,
+        };
+    });
+    localStorage.setItem('kumasite-staticPos', JSON.stringify(staticPos));
+}
+
+/**
+ * アイコン要素を生成して body に fixed 配置する
+ */
+function createAppIcon({ id, name, url, icon, x, y }) {
+    const appEl = document.createElement('a');
+    appEl.href = url;
+    appEl.target = '_blank';
+    appEl.className = 'app';
+    appEl.dataset.id = String(id);
+    appEl.innerHTML = `<i class="fa-solid ${icon} icon"></i><p class="title">${name}</p>`;
+
+    appEl.style.position = 'fixed';
+    appEl.style.left = (x ?? 80) + 'px';
+    appEl.style.top = (y ?? 80) + 'px';
+    appEl.style.zIndex = '100';
+
+    document.body.appendChild(appEl);
+    makeDesktopIcon(appEl);
+    return appEl;
+}
+
+// ========== 初期化 ==========
+
+window.addEventListener('DOMContentLoaded', () => {
+    // index.html に直書きされた静的アイコン（Book App など）を fixed 配置に変換
+    const staticPos = JSON.parse(localStorage.getItem('kumasite-staticPos')) || {};
+    document.querySelectorAll('a.app:not([data-id])').forEach((appEl, i) => {
+        const id = 'static-' + i;
+        appEl.dataset.id = id;
+        appEl.style.position = 'fixed';
+        appEl.style.zIndex = '100';
+        if (staticPos[id]) {
+            // 保存済みの位置に復元
+            appEl.style.left = staticPos[id].x + 'px';
+            appEl.style.top = staticPos[id].y + 'px';
+        } else {
+            // 初回: 現在の位置をそのまま使う
+            const rect = appEl.getBoundingClientRect();
+            appEl.style.left = rect.left + 'px';
+            appEl.style.top = rect.top + 'px';
+        }
+        makeDesktopIcon(appEl);
+    });
+
+    // localStorage からアイコンを復元
+    const currentData = JSON.parse(localStorage.getItem('kumasite-urlList')) || [];
+    currentData.forEach(item => createAppIcon(item));
+});
+
+// ========== オーバーレイ ==========
 
 openBtn.addEventListener('click', () => {
     overlay.style.display = 'flex';
-    originalMenu.style.display = 'none'; // カスタムメニューを閉じる
+    originalMenu.style.display = 'none';
 });
 
 closeBtn.addEventListener('click', () => {
     overlay.style.display = 'none';
 });
 
-// click outside to close
 overlay.addEventListener('click', e => {
-    if (e.target === overlay) {
-        overlay.style.display = 'none';
-    }
+    if (e.target === overlay) overlay.style.display = 'none';
 });
 
-
-
 addLinkBtn.addEventListener('click', () => {
-    // 3つの入力値を取得
     const name = document.getElementById('nameInput').value.trim();
     const url = document.getElementById('urlInput').value.trim();
     const icon = document.getElementById('iconInput').value.trim();
 
-    // 全て入力されているかチェック
     if (name && url && icon) {
-        // 1. オブジェクトとしてまとめる（これが「1セット」のデータ）
-        const itemData = { name, url, icon };
+        const id = Date.now();
+        const x = Math.max(0, window.innerWidth / 2 - 32);
+        const y = Math.max(0, window.innerHeight / 2 - 32);
 
-        // 2. HTML要素を作成
-        const listItem = document.createElement('div');
+        const newEntry = { id, name, url, icon, x, y };
+        createAppIcon(newEntry);
 
-        // 3. 3つのデータを1つの文字列（または構造）として流し込む
-        // テンプレートリテラルを使うと楽に書けます
-        listItem.innerHTML = `
-        <a href="${itemData.url}" target="_blank" class="app">
-        <i class="fa-solid ${itemData.icon}"></i>
-        <p class="title">${itemData.name}</p>
-        </a>
-        `;
-
-        // 4. 画面に追加
-        linkList.appendChild(listItem);
-
-        // 1. 現在のリストを取得（空なら新しい配列 [] を用意）
         const currentData = JSON.parse(localStorage.getItem('kumasite-urlList')) || [];
-
-        // 2. 新しいデータを追加
-        const newEntry = { id: Date.now(), name: itemData.name, url: itemData.url, icon: itemData.icon };
         currentData.push(newEntry);
-
-        // 3. まるごと保存（これで「追加」された状態になる）
         localStorage.setItem('kumasite-urlList', JSON.stringify(currentData));
 
-        // 5. 入力欄をすべてリセット
         document.querySelectorAll('input').forEach(input => input.value = '');
+        overlay.style.display = 'none';
     }
 });
+
+// ========== カスタム右クリックメニュー ==========
 
 document.addEventListener('contextmenu', event => {
     if (!isdefaultmenu) {
-        event.preventDefault(); // 右クリックメニューを表示しない
-        console.log('右クリックされましたが、メニューは表示されません');
-        originalMenu.style.display = 'flex'; // カスタムメニューを表示
-        originalMenu.style.left = `${event.pageX}px`; // カスタムメニューの位置を設定
+        event.preventDefault();
+        originalMenu.style.display = 'flex';
+        originalMenu.style.left = `${event.pageX}px`;
         originalMenu.style.top = `${event.pageY}px`;
     }
 });
+
 document.addEventListener('click', event => {
     if (!event.target.closest('#originalMenu')) {
         originalMenu.style.display = 'none';
-
     }
     if (event.target.id === 'defaultmenu') {
         originalMenu.style.display = 'none';
@@ -104,8 +206,6 @@ document.addEventListener('click', event => {
             clientX: event.clientX,
             clientY: event.clientY
         });
-
-        // 標的の要素（あるいはdocument）に対してイベントを発火させる
         document.dispatchEvent(menuEvent);
     }
 });

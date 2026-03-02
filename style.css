@@ -1,40 +1,44 @@
 body {
-    display: flex;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    /* デスクトップっぽく */
 }
 
 a {
     text-decoration: none;
-    /* 下線を消す */
     color: #f96f8d;
 }
 
 a.a-fff {
     display: block;
-    /* block要素にして親のliを埋める */
     color: #fff;
-
     padding: 6px;
 }
-
-
 
 a.a-fff:hover {
     background-color: #c7425f;
     color: #fff;
     border-radius: 4px;
-
 }
 
-
-
+/* デスクトップアイコン共通スタイル */
 .app {
-    margin-top: 4px;
-    width: 64px;
-    height: 64px;
+    width: 72px;
+    height: 72px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    border-radius: 8px;
+    transition: background 0.15s;
+}
+
+.app:hover {
+    background: rgba(249, 111, 141, 0.12);
 }
 
 .icon {
@@ -43,43 +47,23 @@ a.a-fff:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
     font-size: 32px;
     color: #f96f8d;
-
 }
 
 .title {
-    font-size: 12px;
+    font-size: 11px;
     color: #f96f8d;
     text-align: center;
-    margin-top: 2px;
-    margin-bottom: 2px;
-}
-
-/* floating action button */
-.fab {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background-color: #ffa0b5;
-    color: #fff;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    margin-top: 4px;
+    margin-bottom: 0;
+    word-break: break-all;
+    max-width: 68px;
 }
 
 /* overlay window styles */
 .overlay {
     display: none;
-    /* hidden by default */
     position: fixed;
     top: 0;
     left: 0;
@@ -98,6 +82,9 @@ a.a-fff:hover {
     max-width: 90%;
     max-height: 90%;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .close-button {
@@ -108,21 +95,21 @@ a.a-fff:hover {
     cursor: pointer;
 }
 
-.yokonarabi {
-    display: flex;
-}
-
 .original-menu {
     background-color: #f96f8d;
     border-radius: 8px;
     color: #fff;
     font-size: 60%;
-    padding: 12px;
-    padding-left: 2px;
-    padding-right: 2px;
+    padding: 12px 2px;
     flex-flow: column;
     display: none;
-    /* hidden by default */
     position: fixed;
     list-style: none;
+    margin: 0;
+    z-index: 2000;
+}
+
+/* linkList は不要になったが念のため残す */
+.yokonarabi {
+    display: flex;
 }
