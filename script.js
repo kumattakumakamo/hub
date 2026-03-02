@@ -350,8 +350,25 @@ addLinkBtn.addEventListener('click', () => {
     }
 });
 
-// ===== 右クリック判定 =====
+// ===== アプリを削除 =====
+document.getElementById('deleteLink').addEventListener('click', () => {
+    if (!editingAppId) return;
+    
+    // localStorage から削除
+    let data = JSON.parse(localStorage.getItem('kumasite-urlList')) || [];
+    data = data.filter(d => String(d.id) !== editingAppId);
+    localStorage.setItem('kumasite-urlList', JSON.stringify(data));
+    // DOM から削除
+    const appEl = document.querySelector(`a.app[data-id="${editingAppId}"]`);
+    if (appEl) {
+        appEl.remove();
+    }
+    // メニューを閉じる
+    appEditMenu.style.display = 'none';
+    editingAppId = null;
+});
 
+// ===== 右クリック判定 =====
 document.addEventListener('contextmenu', event => {
     if (!event.target.closest('#originalMenu')) {
         originalMenu.style.display = 'none';
