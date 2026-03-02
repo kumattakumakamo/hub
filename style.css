@@ -220,3 +220,10 @@ a.a-fff:hover {
     filter: brightness(1.08);
     transform: translateY(-1px);
 }
+
+.menu-hr {
+    margin: 0.5em 2px;
+    border: none;
+    border-top: 1px solid #ffffff;
+    width: max;
+}
