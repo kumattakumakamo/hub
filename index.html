@@ -80,10 +80,21 @@
         </div>
     </div>
 
+    <!-- delete confirm overlay -->
+    <div id="deleteConfirmOverlay" class="overlay">
+        <div class="overlay-content color-overlay-content">
+            <p class="color-overlay-title">削除の確認</p>
+            <p id="deleteConfirmMessage">このアプリを削除しますか？</p>
+            <div style="display:flex; gap:10px;">
+                <button id="cancelDelete" class="apply-color-btn" style="flex:1; background:#999;">キャンセル</button>
+                <button id="confirmDelete" class="apply-color-btn" style="flex:1;">削除</button>
+            </div>
+        </div>
+    </div>
+
     <ul id="originalMenu" class="original-menu">
         <li class="omli"><a href="#" id="autoArrange" class="a-fff">アイコンの自動整列</a></li>
         <li class="omli"><a href="#" id="openOverlay" class="a-fff">新規作成</a></li>
-        <li class="omli"><a href="#" id="deleteLink" class="a-fff">削除</a></li>
         <li class="omli"><a href="#" id="openColorOverlay" class="a-fff">色の変更</a></li>
         <li class="omli"><a href="#" id="defaultmenu" class="a-fff">デフォルトの右クリックメニュー</a></li>
     </ul>
@@ -91,6 +102,8 @@
     <ul id="appEditMenu" class="original-menu">
         <li class="omli"><a href="#" id="openAppLink" class="a-fff" >開く</a></li>
         <li class="omli"><a href="#" id="editOpenOverlay" class="a-fff">編集</a></li>
+        <li class="omli"><a href="#" id="deleteLink" class="a-fff">削除</a></li>
+        
     </ul>
 
     <script src="script.js"></script>

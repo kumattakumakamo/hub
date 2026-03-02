@@ -6,8 +6,13 @@ const originalMenu = document.getElementById('originalMenu');
 const appEditMenu = document.getElementById('appEditMenu');
 const openAppLink = document.getElementById('openAppLink');
 const editOpenOverlay = document.getElementById('editOpenOverlay');
+const deleteConfirmOverlay = document.getElementById('deleteConfirmOverlay');
+const deleteConfirmMessage = document.getElementById('deleteConfirmMessage');
+const cancelDeleteBtn = document.getElementById('cancelDelete');
+const confirmDeleteBtn = document.getElementById('confirmDelete');
 let isdefaultmenu = false;
 let editingAppId = null;
+let pendingDeleteAppId = null;
 
 // ========== デスクトップ式 自由配置ドラッグ ==========
 
@@ -244,6 +249,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // ========== オーバーレイ ==========
 // 開くボタンでオーバーレイを表示
 openBtn.addEventListener('click', () => {
+    editingAppId = null;
     document.querySelectorAll('input').forEach(input => input.value = '');
     overlay.style.display = 'flex';
     originalMenu.style.display = 'none';
@@ -351,6 +357,39 @@ addLinkBtn.addEventListener('click', () => {
     }
 });
 
+function openDeleteConfirm(appId) {
+    const normalizedId = String(appId || '');
+    if (!normalizedId) return;
+
+    pendingDeleteAppId = normalizedId;
+    const appEl = document.querySelector(`a.app[data-id="${normalizedId}"]`);
+    const appName = appEl?.querySelector('.title')?.textContent?.trim() || 'このアプリ';
+
+    deleteConfirmMessage.textContent = `「${appName}」を削除しますか？`;
+    deleteConfirmOverlay.style.display = 'flex';
+    appEditMenu.style.display = 'none';
+}
+
+function closeDeleteConfirm() {
+    deleteConfirmOverlay.style.display = 'none';
+    pendingDeleteAppId = null;
+    editingAppId = null;
+}
+
+function deleteAppById(appId) {
+    const normalizedId = String(appId || '');
+    if (!normalizedId) return;
+
+    // localStorage から削除（壊れたデータでも落ちないように安全に扱う）
+    let data = [];
+    try {
+        const parsed = JSON.parse(localStorage.getItem('kumasite-urlList'));
+        data = Array.isArray(parsed) ? parsed : [];
+    } catch (_) {
+        data = [];
+    }
+    data = data.filter(d => String(d.id) !== normalizedId);
+    localStorage.setItem('kumasite-urlList', JSON.stringify(data));
 // ===== アプリを開く =====
 document.getElementById('openAppLink').addEventListener('click', () => {
     if (!editingAppId) return;
@@ -364,6 +403,40 @@ document.getElementById('openAppLink').addEventListener('click', () => {
 
 // ===== 右クリック判定 =====
 
+    // DOM から削除
+    const appEl = document.querySelector(`a.app[data-id="${normalizedId}"]`);
+    if (appEl) {
+        appEl.remove();
+    }
+
+    editingAppId = null;
+    appEditMenu.style.display = 'none';
+}
+
+// ===== アプリを削除 =====
+document.getElementById('deleteLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (!editingAppId) return;
+    openDeleteConfirm(editingAppId);
+});
+
+cancelDeleteBtn.addEventListener('click', () => {
+    closeDeleteConfirm();
+});
+
+confirmDeleteBtn.addEventListener('click', () => {
+    if (!pendingDeleteAppId) return;
+    deleteAppById(pendingDeleteAppId);
+    closeDeleteConfirm();
+});
+
+deleteConfirmOverlay.addEventListener('click', (e) => {
+    if (e.target === deleteConfirmOverlay) {
+        closeDeleteConfirm();
+    }
+});
+
+// ===== 右クリック判定 =====
 document.addEventListener('contextmenu', event => {
     if (!event.target.closest('#originalMenu')) {
         originalMenu.style.display = 'none';
@@ -385,6 +458,7 @@ document.addEventListener('contextmenu', event => {
             originalMenu.style.display = 'flex';
             originalMenu.style.left = `${event.pageX}px`;
             originalMenu.style.top = `${event.pageY}px`;
+            editingAppId = null;
         }
     }
 });
@@ -395,6 +469,7 @@ document.addEventListener('click', event => {
     }
     if (!event.target.closest('#appEditMenu')) {
         appEditMenu.style.display = 'none';
+        editingAppId = null;
     }
     if (event.target.id === 'autoArrange') {
         originalMenu.style.display = 'none';
