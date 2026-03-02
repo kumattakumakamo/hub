@@ -246,10 +246,30 @@ openBtn.addEventListener('click', () => {
 
 closeBtn.addEventListener('click', () => {
     overlay.style.display = 'none';
+    resetIconPicker();
 });
 
+function resetIconPicker() {
+    document.querySelectorAll('.icon-choice').forEach(b => b.classList.remove('selected'));
+    document.getElementById('iconInput').value = '';
+}
+
 overlay.addEventListener('click', e => {
-    if (e.target === overlay) overlay.style.display = 'none';
+    if (e.target === overlay) {
+        overlay.style.display = 'none';
+        resetIconPicker();
+    }
+});
+
+// ========== アイコン選択ピッカー ==========
+document.querySelectorAll('.icon-choice').forEach(btn => {
+    btn.addEventListener('click', () => {
+        // 選択状態を切り替え
+        document.querySelectorAll('.icon-choice').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        // hidden input に値をセット
+        document.getElementById('iconInput').value = btn.dataset.icon;
+    });
 });
 
 addLinkBtn.addEventListener('click', () => {
@@ -270,6 +290,7 @@ addLinkBtn.addEventListener('click', () => {
         localStorage.setItem('kumasite-urlList', JSON.stringify(currentData));
 
         document.querySelectorAll('input').forEach(input => input.value = '');
+        resetIconPicker();
         overlay.style.display = 'none';
     }
 });

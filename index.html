@@ -25,7 +25,39 @@
             <span id="closeOverlay" class="close-button">&times;</span>
             <input type="text" placeholder="名前を入力" id="nameInput">
             <input type="text" placeholder="URLを入力" id="urlInput">
-            <input type="text" placeholder="アイコン名を入力" id="iconInput">
+            <!-- アイコン選択グリッド -->
+            <p class="icon-picker-label">アイコンを選択</p>
+            <div class="icon-picker" id="iconPicker">
+                <button type="button" class="icon-choice" data-icon="fa-globe">
+                    <i class="fa-solid fa-globe"></i>
+                    <span>ウェブ</span>
+                </button>
+                <button type="button" class="icon-choice" data-icon="fa-envelope">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span>メール</span>
+                </button>
+                <button type="button" class="icon-choice" data-icon="fa-folder">
+                    <i class="fa-solid fa-folder"></i>
+                    <span>フォルダ</span>
+                </button>
+                <button type="button" class="icon-choice" data-icon="fa-music">
+                    <i class="fa-solid fa-music"></i>
+                    <span>音楽</span>
+                </button>
+                <button type="button" class="icon-choice" data-icon="fa-video">
+                    <i class="fa-solid fa-video"></i>
+                    <span>動画</span>
+                </button>
+                <button type="button" class="icon-choice" data-icon="fa-image">
+                    <i class="fa-solid fa-image"></i>
+                    <span>画像</span>
+                </button>
+                <button type="button" class="icon-choice" data-icon="fa-gear">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>設定</span>
+                </button>
+            </div>
+            <input type="hidden" id="iconInput">
             <button id="addLink" class="add-button">追加</button>
         </div>
     </div>
